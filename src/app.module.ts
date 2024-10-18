@@ -6,11 +6,11 @@ import { AppService } from './app.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
+      isGlobal: true,         // Makes the ConfigModule available globally
+      envFilePath: '.env',   // Specifies the path to your .env file
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController],  // Registers your application controllers
+  providers: [AppService],        // Registers your application services
 })
 export class AppModule {}
