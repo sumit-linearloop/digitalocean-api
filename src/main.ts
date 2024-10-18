@@ -7,7 +7,7 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const PORT = process.env.PORT || 3000;  // Default to 3000 if not specified
+  const PORT = process.env.PORT || 1500;  // Default to 3000 if not specified
   const ENV = process.env.NODE_ENV || 'development';  // Default to development if not specified
 
   await app.listen(PORT, () => {
