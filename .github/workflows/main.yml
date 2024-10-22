@@ -58,3 +58,8 @@ jobs:
                 exit 1;
               }
               ;;
+            *)
+              echo "Unknown action: ${{ github.event.inputs.action }}";
+              exit 1;
+              ;;
+          esac
