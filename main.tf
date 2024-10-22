@@ -22,19 +22,18 @@ resource "digitalocean_droplet" "web_server" {
     destination = "/tmp/initial_setup.sh"
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/initial_setup.sh",
-      "export SSH_PRIVATE_KEY=${var.ssh_private_key}",
-      "export NODE_VERSION=${var.node_version}",
-      "export AWS_ACCESS_KEY=${var.aws_access_key}",
-      "export AWS_SECRET_KEY=${var.aws_secret_key}",
-      "export AWS_REGION=${var.aws_region}",
-      "bash /tmp/initial_setup.sh"
-    ]
-  }
+provisioner "remote-exec" {
+  inline = [
+    "chmod +x /tmp/initial_setup.sh",
+    "export SSH_PRIVATE_KEY=${var.ssh_private_key}",
+    "export NODE_VERSION=${var.node_version}",
+    "export AWS_ACCESS_KEY=${var.aws_access_key}",
+    "export AWS_SECRET_KEY=${var.aws_secret_key}",
+    "export AWS_REGION=${var.aws_region}",
+    "bash /tmp/initial_setup.sh > /tmp/setup.log 2>&1"
+  ]
+ }
 }
-
 resource "null_resource" "app_management" {
   depends_on = [digitalocean_droplet.web_server]
 }
