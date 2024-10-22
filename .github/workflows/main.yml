@@ -1,0 +1,60 @@
+name: Terraform CI/CD Pipeline
+
+on:
+  workflow_dispatch:  # Enables manual trigger
+    inputs:
+      action:  # Input to choose between apply, destroy, or specific actions
+        description: "Select the Terraform action to perform"
+        required: true
+        default: "apply"
+        type: choice
+        options:
+          - apply
+          - destroy
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Download terraform.tfvars from S3
+        run: |
+          aws s3 cp s3://sumit-cli/terraform.tfvars ./terraform.tfvars || { 
+            echo "Failed to download terraform.tfvars"; 
+            exit 1; 
+          }
+
+      - name: Terraform Init
+        run: |
+          terraform init || { echo "Terraform init failed"; exit 1; }
+
+      - name: Terraform Action
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "Running action: ${{ github.event.inputs.action }}"
+          case "${{ github.event.inputs.action }}" in
+            apply)
+              terraform apply -auto-approve -var="ssh_public_key=${SSH_PUBLIC_KEY}" -var="ssh_private_key=${SSH_PRIVATE_KEY}" || {
+                echo "Terraform apply failed";
+                exit 1;
+              }
+              ;;
+            destroy)
+              echo "Running terraform destroy..."
+              terraform destroy -auto-approve -var="ssh_public_key=${SSH_PUBLIC_KEY}" -var="ssh_private_key=${SSH_PRIVATE_KEY}" || {
+                echo "Terraform destroy failed";
+                exit 1;
+              }
+              ;;
