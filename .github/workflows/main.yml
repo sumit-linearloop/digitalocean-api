@@ -26,6 +26,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}          # Ensure this is set in your repository secrets
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}     # Ensure this is set in your repository secrets
           aws-region: ${{ secrets.AWS_REGION }}                     # Ensure this is set in your repository secrets
+          audience: sts.amazonaws.com  # This is optional and only needed if you're using STS Assume Role
 
       - name: Download terraform.tfvars from S3
         run: |
