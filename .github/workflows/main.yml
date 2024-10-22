@@ -1,3 +1,52 @@
+# name: CI/CD Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - main  # Change this to your desired branch
+#   pull_request:
+#     branches:
+#       - main  # Change this to your desired branch
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}  # Ensure these secrets are set correctly
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}  # e.g., us-east-1
+
+#       - name: Download terraform.tfvars from S3
+#         run: |
+#           if ! aws s3 cp s3://sumit-cli/terraform.tfvars ./terraform.tfvars; then
+#             echo "Failed to download terraform.tfvars from S3"
+#             exit 1
+#           fi
+
+#       - name: Terraform Init
+#         run: |
+#           terraform init || { echo "Terraform init failed"; exit 1; }
+
+#       - name: Terraform Plan
+#         run: |
+#           terraform plan -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var="ssh_private_key=${{ secrets.SSH_PRIVATE_KEY }}" || { echo "Terraform plan failed"; exit 1; }
+
+#       - name: Terraform Apply
+#         env:
+#           SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}  # Pass the public key secret
+#           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Pass the private key secret
+#         run: |
+#           terraform apply -auto-approve -var="ssh_public_key=${SSH_PUBLIC_KEY}" -var="ssh_private_key=${SSH_PRIVATE_KEY}" || { echo "Terraform apply failed"; exit 1; }
+
+
+
 name: Terraform CI/CD Pipeline
 
 on:
@@ -23,10 +72,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}          # Ensure this is set in your repository secrets
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}     # Ensure this is set in your repository secrets
-          aws-region: ${{ secrets.AWS_REGION }}                     # Ensure this is set in your repository secrets
-          audience: sts.amazonaws.com  # This is optional and only needed if you're using STS Assume Role
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Download terraform.tfvars from S3
         run: |
@@ -60,7 +108,15 @@ jobs:
               }
               ;;
             *)
-              echo "Unknown action: ${{ github.event.inputs.action }}";
-              exit 1;
+              echo "Invalid action: ${{ github.event.inputs.action }}"
+              exit 1
               ;;
           esac
+
+
+
+
+
+
+
+
