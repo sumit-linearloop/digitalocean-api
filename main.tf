@@ -22,23 +22,29 @@ resource "digitalocean_droplet" "web_server" {
     destination = "/tmp/initial_setup.sh"
   }
 
-provisioner "remote-exec" {
-  inline = [
-    "chmod +x /tmp/initial_setup.sh",
-    "export SSH_PRIVATE_KEY=${var.ssh_private_key}",
-    "export NODE_VERSION=${var.node_version}",
-    "export AWS_ACCESS_KEY=${var.aws_access_key}",
-    "export AWS_SECRET_KEY=${var.aws_secret_key}",
-    "export AWS_REGION=${var.aws_region}",
-    "bash /tmp/initial_setup.sh > /tmp/setup.log 2>&1"
-  ]
- }
-}
-resource "null_resource" "app_management" {
-  depends_on = [digitalocean_droplet.web_server]
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/initial_setup.sh",
+      "export SSH_PRIVATE_KEY=${var.ssh_private_key}",
+      "export NODE_VERSION=${var.node_version}",
+      "export AWS_ACCESS_KEY=${var.aws_access_key}",
+      "export AWS_SECRET_KEY=${var.aws_secret_key}",
+      "export AWS_REGION=${var.aws_region}",
+      "bash /tmp/initial_setup.sh > /tmp/setup.log 2>&1 || (echo 'Initial setup failed, see /tmp/setup.log for details' && exit 1)"
+    ]
+  }
 }
 
 output "droplet_public_ip" {
   description = "The public IP address of the web server droplet"
   value       = digitalocean_droplet.web_server.ipv4_address
+}
+
+# If you have any app management tasks, you can define them here
+resource "null_resource" "app_management" {
+  depends_on = [digitalocean_droplet.web_server]
+
+  provisioner "local-exec" {
+    command = "echo 'Droplet is up and running at ${digitalocean_droplet.web_server.ipv4_address}'"
+  }
 }
