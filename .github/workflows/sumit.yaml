@@ -30,7 +30,7 @@ jobs:
           ssh -T git@github.com || true
 
       - name: Clone the repository
-        run: git clone git@github.com:sumit-linearloop/digitalocean-api.git ./master
+        run: git clone git@github.com:sumit-linearloop/digitalocean-api.git /var/www/master
 
       - name: Run deploy script
         env:
