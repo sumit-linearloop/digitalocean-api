@@ -38,5 +38,5 @@ jobs:
           SERVER_HOST: root
         run: |
           echo "Starting deployment process..."
-          chmod +x ~/DEV/deploy.sh
-          ~/DEV/deploy.sh
+          chmod +x ~/master/deploy.sh
+          ~/master/deploy.sh
