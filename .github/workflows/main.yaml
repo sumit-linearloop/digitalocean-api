@@ -1,0 +1,41 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'  # Specify your desired Node.js version
+
+      - name: Prepare SSH Key
+        run: |
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > id_rsa
+          chmod 600 id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add id_rsa
+
+      - name: Test SSH connection to GitHub
+        run: ssh -T git@github.com
+
+      - name: Clone the repository
+        run: git clone git@github.com:sumit-linearloop/digitalocean-api.git /var/www/DEV
+
+      - name: Run deploy script
+        env:
+          SERVER_IP: 206.189.139.190  # Replace with your server IP
+          SERVER_HOST: root        # Replace with your server host
+        run: |
+          echo "Starting deployment process..."
+          chmod +x ./deploy.sh
+          ./deploy.sh
