@@ -26,7 +26,8 @@ jobs:
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
       - name: Test SSH connection to GitHub
-        run: ssh -T git@github.com
+        run: |
+          ssh -T git@github.com || true
 
       - name: Clone the repository
         run: git clone git@github.com:sumit-linearloop/digitalocean-api.git /var/www/DEV
