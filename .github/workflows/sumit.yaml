@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master  # Use the branch you want to deploy from
+      - master  # or the branch you want to deploy from
 
 jobs:
   build:
@@ -18,10 +18,17 @@ jobs:
         with:
           node-version: '18'  # or any other version
 
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY_ID }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
       - name: Run deployment script
         env:
-          SERVER_IP: 128.199.28.236  # Pass the server IP as an environment variable
-          SERVER_HOST: root        # Pass the server hostname as an environment variable
+          SERVER_IP: 128.199.28.236  # Pass the server IP from secrets
+          SERVER_HOST: root                      # Pass the server hostname
         run: |
           echo "Starting deployment process..."
           chmod +x ./deploy.sh
