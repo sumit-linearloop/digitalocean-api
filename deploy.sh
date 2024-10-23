@@ -48,11 +48,11 @@ yarn install || { echo "Failed to install dependencies"; exit 1; }
 yarn build || { echo "Failed to build project"; exit 1; }
 
 # Check if PM2 process exists
-if pm2 list | grep -q "DEV"; then
+if pm2 list | grep -q "api"; then
     echo "PM2 process exists. No restart command executed."
 else
     echo "Starting new PM2 process..."
-    pm2 start dist/main.js --name "DEV" || { echo "Failed to start PM2 process"; exit 1; }
+    pm2 start dist/main.js --name "api" || { echo "Failed to start PM2 process"; exit 1; }
 fi
 
 # Save PM2 configuration
