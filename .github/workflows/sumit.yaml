@@ -3,34 +3,37 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master
-      - DEV  # Added DEV branch
+      - master  # or any branch you want to deploy from
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
+      
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18'
+          node-version: '16'  # Specify the Node.js version you want
 
-      - name: Set up SSH
+      - name: Install dependencies
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY_ID }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H github.com >> ~/.ssh/known_hosts  # Ensure known hosts are configured
+          cd test  # Change to your working directory
+          yarn install
 
-      - name: Deploy to Digital Ocean
+      - name: Build the project
+        run: |
+          cd test  # Change to your working directory
+          yarn build
+
+      - name: SSH to server and deploy
         env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}  # Store your server IP in GitHub Secrets
+          SERVER_HOSTNAME: ${{ secrets.SERVER_HOSTNAME }}  # Store your server hostname in GitHub Secrets
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_ID }}  # Store your SSH private key in GitHub Secrets
         run: |
-          echo "Starting deployment process..."
-          chmod +x ./deploy.sh  # Make sure deploy.sh is executable
-          ./deploy.sh  # Execute the deployment script
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key root@$SERVER_IP 'bash -s' < ./deploy.sh  # Adjust the path to your deploy script
