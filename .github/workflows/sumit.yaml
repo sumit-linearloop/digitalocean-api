@@ -30,7 +30,7 @@ jobs:
           ssh -T git@github.com || true
 
       - name: Clone the repository
-        run: git clone git@github.com:sumit-linearloop/digitalocean-api.git /var/www/master
+        run: git clone git@github.com:sumit-linearloop/digitalocean-api.git ~/master
 
       - name: Run deploy script
         env:
@@ -38,5 +38,5 @@ jobs:
           SERVER_HOST: root
         run: |
           echo "Starting deployment process..."
-          chmod +x ./deploy.sh
-          ./deploy.sh
+          chmod +x ~/DEV/deploy.sh
+          ~/DEV/deploy.sh
