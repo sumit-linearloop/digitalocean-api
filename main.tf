@@ -5,7 +5,7 @@ resource "digitalocean_ssh_key" "existing" {
 
 resource "digitalocean_droplet" "web_server" {
   image    = "ubuntu-24-04-x64"
-  name     = "sumit"
+  name     = "sumit-1"
   region   = "blr1"
   size     = "s-1vcpu-1gb"
   ssh_keys = [digitalocean_ssh_key.existing.fingerprint]
