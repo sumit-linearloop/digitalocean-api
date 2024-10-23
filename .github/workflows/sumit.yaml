@@ -4,9 +4,10 @@ on:
   push:
     branches:
       - master
+      - DEV  # Added DEV branch
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,25 +19,12 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY_ID }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Add server's host key to known_hosts
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          cat ~/.ssh/known_hosts  # Optional: Debugging step to show known_hosts content
-
-      - name: Test SSH connection to GitHub
-        run: |
-          ssh -T git@github.com || true
-
-      - name: Run deploy script
+      - name: Deploy to Digital Ocean
         env:
-          SERVER_IP: 128.199.28.236  # Ensure this is the correct server IP
-          SERVER_USER: root  # Adjust if using a different user
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
         run: |
           echo "Starting deployment process..."
           chmod +x ./deploy.sh
-          ssh -i ~/.ssh/id_rsa $SERVER_USER@$SERVER_IP "sudo bash -s" < ./deploy.sh
+          ./deploy.sh
