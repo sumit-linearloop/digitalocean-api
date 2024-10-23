@@ -65,6 +65,10 @@ jobs:
         run: |
           ssh -T git@github.com || echo "SSH authentication successful but shell access not allowed"
 
+      - name: Test SSH Connection to Remote Server
+        run: |
+          ssh -i ~/.ssh/id_rsa root@128.199.28.236 "echo 'SSH connection successful'" || { echo "SSH connection to remote server failed"; exit 1; }
+
       - name: Run deployment script
         run: |
           ssh -i ~/.ssh/id_rsa root@128.199.28.236 "bash -s" < ./deploy.sh || { echo "Deployment failed"; exit 1; }
