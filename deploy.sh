@@ -7,6 +7,7 @@ WORK_DIR="/var/www/app"  # New work directory
 APP_NAME="api"  # Name for PM2 process
 
 # Log file
+touch "$WORK_DIR/deploy.log"
 LOG_FILE="$WORK_DIR/deploy.log"
 
 # Ensure the script runs with root privileges
