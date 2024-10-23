@@ -6,6 +6,14 @@ BRANCH_NAME="master"
 WORK_DIR="/var/www/app"  # New work directory
 APP_NAME="api"  # Name for PM2 process
 
+# Create work directory if it doesn't exist
+echo "Creating work directory: $WORK_DIR"
+mkdir -p "$WORK_DIR" || { echo "Failed to create work directory"; exit 1; }
+
+# Set correct permissions
+chown -R "$USER:$USER" "$WORK_DIR"
+chmod 755 "$WORK_DIR"
+
 # Log file
 LOG_FILE="$WORK_DIR/deploy.log"
 
@@ -15,26 +23,24 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Create work directory if it doesn't exist
-echo "Creating work directory: $WORK_DIR" | tee -a "$LOG_FILE"
-mkdir -p "$WORK_DIR" || { echo "Failed to create work directory" | tee -a "$LOG_FILE"; exit 1; }
-
-# Set correct permissions
-chown -R "$USER:$USER" "$WORK_DIR"
-chmod 755 "$WORK_DIR"
-
 # Navigate to work directory
-cd "$WORK_DIR" || { echo "Failed to change to work directory" | tee -a "$LOG_FILE"; exit 1; }
+cd "$WORK_DIR" || { echo "Failed to change to work directory"; exit 1; }
 
-# Clone or update the repository
+# Check if the directory is empty and clone or pull the repository
 if [ -d ".git" ]; then
     echo "Repository already exists. Pulling latest changes..." | tee -a "$LOG_FILE"
     git reset --hard || { echo "Failed to reset changes" | tee -a "$LOG_FILE"; exit 1; }
     git clean -fd || { echo "Failed to clean directory" | tee -a "$LOG_FILE"; exit 1; }
     git pull origin "$BRANCH_NAME" || { echo "Failed to pull changes" | tee -a "$LOG_FILE"; exit 1; }
 else
-    echo "Directory is empty. Cloning repository..." | tee -a "$LOG_FILE"
-    git clone -b "$BRANCH_NAME" "$GIT_REPO" . || { echo "Failed to clone repository" | tee -a "$LOG_FILE"; exit 1; }
+    # Check if the directory is not empty
+    if [ "$(ls -A .)" ]; then
+        echo "Directory is not empty. Please ensure it is clean before cloning." | tee -a "$LOG_FILE"
+        exit 1
+    else
+        echo "Directory is empty. Cloning repository..." | tee -a "$LOG_FILE"
+        git clone -b "$BRANCH_NAME" "$GIT_REPO" . || { echo "Failed to clone repository" | tee -a "$LOG_FILE"; exit 1; }
+    fi
 fi
 
 # Check if Node.js and npm are installed
