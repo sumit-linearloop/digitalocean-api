@@ -3,37 +3,26 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master  # or any branch you want to deploy from
+      - main  # Use the branch you want to deploy from
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Set up Node.js
+
+      - name: Set up Node.js (if needed)
         uses: actions/setup-node@v2
         with:
-          node-version: '16'  # Specify the Node.js version you want
+          node-version: '18'  # or any other version
 
-      - name: Install dependencies
-        run: |
-          cd test  # Change to your working directory
-          yarn install
-
-      - name: Build the project
-        run: |
-          cd test  # Change to your working directory
-          yarn build
-
-      - name: SSH to server and deploy
+      - name: Run deployment script
         env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}  # Store your server IP in GitHub Secrets
-          SERVER_HOSTNAME: ${{ secrets.SERVER_HOSTNAME }}  # Store your server hostname in GitHub Secrets
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_ID }}  # Store your SSH private key in GitHub Secrets
+          SERVER_IP: 128.199.28.236  # Pass the server IP as an environment variable
+          SERVER_HOST: root        # Pass the server hostname as an environment variable
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key
-          chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key root@$SERVER_IP 'bash -s' < ./deploy.sh  # Adjust the path to your deploy script
+          echo "Starting deployment process..."
+          chmod +x ./deploy.sh
+          ./deploy.sh
