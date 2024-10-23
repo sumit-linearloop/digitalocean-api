@@ -3,7 +3,7 @@
 # Configuration variables
 GIT_REPO="git@github.com:sumit-linearloop/digitalocean-api.git"
 BRANCH_NAME="DEV"
-WORK_DIR="/var/www/DEV"
+WORK_DIR="$HOME/DEV"  # Use a directory in the home folder
 
 # Function to check SSH connection
 check_ssh_connection() {
@@ -49,6 +49,15 @@ else
     echo "Directory is empty. Cloning repository..."
     git clone "$GIT_REPO" . || handle_error "Failed to clone repository"
     git checkout "$BRANCH_NAME" || handle_error "Failed to checkout branch"
+fi
+
+# Check for Node.js and yarn installation
+if ! command -v node &> /dev/null; then
+    handle_error "Node.js is not installed. Please install Node.js."
+fi
+
+if ! command -v yarn &> /dev/null; then
+    handle_error "Yarn is not installed. Please install Yarn."
 fi
 
 # Install dependencies and build
