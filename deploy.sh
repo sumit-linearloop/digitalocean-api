@@ -3,86 +3,69 @@
 # Configuration variables
 GIT_REPO="git@github.com:sumit-linearloop/digitalocean-api.git"
 BRANCH_NAME="master"
-WORK_DIR="/var/www/app"  # New work directory
-APP_NAME="api"  # Name for PM2 process
+WORK_DIR="/var/www/api"
 
-# Log file
-touch "$WORK_DIR/deploy.log"
-LOG_FILE="$WORK_DIR/deploy.log"
+# Function to check SSH connection
+check_ssh_connection() {
+    echo "Testing SSH connection to GitHub..."
+    if ! ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+        echo "Error: SSH authentication failed!"
+        echo "Please ensure:"
+        echo "1. SSH key is generated (ssh-keygen -t rsa -b 4096)"
+        echo "2. Public key is added to GitHub (cat ~/.ssh/id_rsa.pub)"
+        echo "3. SSH agent is running (eval \$(ssh-agent -s))"
+        echo "4. SSH key is added to agent (ssh-add ~/.ssh/id_rsa)"
+        exit 1
+    fi
+}
 
-# Ensure the script runs with root privileges
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run as root." | tee -a "$LOG_FILE"
+# Function to handle errors
+handle_error() {
+    echo "Error: $1" | tee -a "$WORK_DIR/deploy.log"  # Log error to file
     exit 1
-fi
+}
+
+# Start SSH agent if not running
+eval $(ssh-agent -s) > /dev/null
+
+# Add SSH key to agent
+ssh-add ~/.ssh/id_rsa 2>/dev/null || echo "Note: Could not add SSH key to agent"
+
+# Check SSH connection before proceeding
+check_ssh_connection
 
 # Create work directory if it doesn't exist
-echo "Creating work directory: $WORK_DIR" | tee -a "$LOG_FILE"
-mkdir -p "$WORK_DIR" || { echo "Failed to create work directory" | tee -a "$LOG_FILE"; exit 1; }
-
-# Ensure the log file is created
-touch "$LOG_FILE" || { echo "Failed to create log file" | tee -a "$LOG_FILE"; exit 1; }
-
-# Set correct permissions
-chown -R root:root "$WORK_DIR"
-chmod 755 "$WORK_DIR"
+echo "Creating work directory: $WORK_DIR"
+mkdir -p "$WORK_DIR" || handle_error "Failed to create work directory"
 
 # Navigate to work directory
-cd "$WORK_DIR" || { echo "Failed to change to work directory" | tee -a "$LOG_FILE"; exit 1; }
+cd "$WORK_DIR" || handle_error "Failed to change to work directory"
 
-# Check if the directory is empty and clone or pull the repository
-if [ -d ".git" ]; then
-    echo "Repository already exists. Pulling latest changes..." | tee -a "$LOG_FILE"
-    git reset --hard || { echo "Failed to reset changes" | tee -a "$LOG_FILE"; exit 1; }
-    git clean -fd || { echo "Failed to clean directory" | tee -a "$LOG_FILE"; exit 1; }
-    git pull origin "$BRANCH_NAME" || { echo "Failed to pull changes" | tee -a "$LOG_FILE"; exit 1; }
+# Check if directory is empty
+if [ "$(ls -A "$WORK_DIR")" ]; then
+    echo "Directory is not empty. Pulling latest changes..."
+    git pull origin "$BRANCH_NAME" || handle_error "Failed to pull changes"
 else
-    # Check if the directory is not empty
-    if [ "$(ls -A .)" ]; then
-        echo "Directory is not empty. Contents are:" | tee -a "$LOG_FILE"
-        ls -la | tee -a "$LOG_FILE"  # List the contents of the directory
-        echo "Please ensure the directory is clean before cloning." | tee -a "$LOG_FILE"
-        exit 1
-    else
-        echo "Directory is empty. Cloning repository..." | tee -a "$LOG_FILE"
-        git clone -b "$BRANCH_NAME" "$GIT_REPO" . || { echo "Failed to clone repository" | tee -a "$LOG_FILE"; exit 1; }
-    fi
+    echo "Directory is empty. Cloning repository..."
+    git clone "$GIT_REPO" . || handle_error "Failed to clone repository"
+    git checkout "$BRANCH_NAME" || handle_error "Failed to checkout branch"
 fi
 
-# Check if Node.js and npm are installed
-for cmd in node npm; do
-    if ! command -v "$cmd" &>/dev/null; then
-        echo "$cmd is not installed. Please install it and try again." | tee -a "$LOG_FILE"
-        exit 1
-    fi
-done
+# Install dependencies and build
+echo "Installing dependencies and building..."
+yarn install || handle_error "Failed to install dependencies"
+yarn build || handle_error "Failed to build project"
 
-# Install PM2 if not installed
-if ! command -v pm2 &>/dev/null; then
-    echo "PM2 is not installed. Installing PM2..." | tee -a "$LOG_FILE"
-    npm install -g pm2 || { echo "Failed to install PM2" | tee -a "$LOG_FILE"; exit 1; }
-fi
-
-# Install dependencies and build the project
-echo "Installing dependencies and building..." | tee -a "$LOG_FILE"
-yarn install || { echo "Failed to install dependencies" | tee -a "$LOG_FILE"; exit 1; }
-yarn build || { echo "Failed to build project" | tee -a "$LOG_FILE"; exit 1; }
-
-# Restart the PM2 process if it exists, otherwise start a new one
-if pm2 list | grep -q "$APP_NAME"; then
-    echo "Restarting existing PM2 process: $APP_NAME" | tee -a "$LOG_FILE"
-    pm2 restart "$APP_NAME" --update-env || { echo "Failed to restart PM2 process" | tee -a "$LOG_FILE"; exit 1; }
+# Check if PM2 process exists
+if pm2 list | grep -q "api"; then
+    echo "Restarting PM2 process..."
+    pm2 restart "api" || handle_error "Failed to restart PM2 process"
 else
-    echo "Starting new PM2 process..." | tee -a "$LOG_FILE"
-    pm2 start dist/main.js --name "$APP_NAME" --update-env || { echo "Failed to start PM2 process" | tee -a "$LOG_FILE"; exit 1; }
+    echo "Starting new PM2 process..."
+    pm2 start dist/main.js --name "api" || handle_error "Failed to start PM2 process"
 fi
 
-# Save PM2 process list to ensure it starts on reboot
-echo "Saving PM2 process list..." | tee -a "$LOG_FILE"
-pm2 save || { echo "Failed to save PM2 configuration" | tee -a "$LOG_FILE"; exit 1; }
+# Save PM2 configuration
+pm2 save || handle_error "Failed to save PM2 configuration"
 
-# Ensure PM2 starts on system boot
-echo "Setting PM2 startup..." | tee -a "$LOG_FILE"
-pm2 startup systemd -u "$USER" --hp "$HOME" || { echo "Failed to set PM2 startup" | tee -a "$LOG_FILE"; exit 1; }
-
-echo "Deployment completed successfully!" | tee -a "$LOG_FILE"
+echo "Deployment completed successfully!"
