@@ -3,7 +3,9 @@
 # Configuration variables
 GIT_REPO="git@github.com:sumit-linearloop/digitalocean-api.git"
 BRANCH_NAME="master"
-WORK_DIR="$HOME/test"  # Use home directory for permissions
+WORK_DIR="$HOME/app"  # Use home directory for permissions
+SERVER_IP="128.199.28.236"  # Replace with your server IP
+SERVER_HOSTNAME="root"  # Replace with your server hostname
 
 # Create work directory if it doesn't exist
 echo "Creating work directory: $WORK_DIR"
