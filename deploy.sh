@@ -5,26 +5,7 @@ GIT_REPO="git@github.com:sumit-linearloop/digitalocean-api.git"
 BRANCH_NAME="master"
 WORK_DIR="/var/www/app"  # Use home directory for permissions
 
-# Function to check SSH connection
-check_ssh_connection() {
-    echo "Testing SSH connection to GitHub..."
-    if ! ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
-        echo "Error: SSH authentication failed!"
-        echo "Please ensure:"
-        echo "1. SSH key is generated (ssh-keygen -t rsa -b 4096)"
-        echo "2. Public key is added to GitHub (cat ~/.ssh/id_rsa.pub)"
-        exit 1
-    fi
-}
 
-# Start SSH agent
-eval $(ssh-agent -s)
-
-# Add SSH key to agent
-ssh-add ~/.ssh/id_rsa || echo "Note: Could not add SSH key to agent"
-
-# Check SSH connection before proceeding
-check_ssh_connection
 
 # Create work directory if it doesn't exist
 echo "Creating work directory: $WORK_DIR"
