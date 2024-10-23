@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Use the branch you want to deploy from
+      - master  # Use the branch you want to deploy from
 
 jobs:
   build:
