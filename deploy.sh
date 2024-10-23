@@ -3,7 +3,7 @@
 # Configuration variables
 GIT_REPO="git@github.com:sumit-linearloop/digitalocean-api.git"
 BRANCH_NAME="master"
-WORK_DIR="$HOME/api"
+WORK_DIR="$HOME/app"  # Use a directory where you have write permissions
 
 # Function to check SSH connection
 check_ssh_connection() {
@@ -57,15 +57,15 @@ yarn install || handle_error "Failed to install dependencies"
 yarn build || handle_error "Failed to build project"
 
 # Check if PM2 process exists
-if pm2 list | grep -q "api"; then
+if npx pm2 list | grep -q "api"; then
     echo "Restarting PM2 process..."
-    pm2 restart "api" || handle_error "Failed to restart PM2 process"
+    npx pm2 restart "api" --update-env || handle_error "Failed to restart PM2 process"
 else
     echo "Starting new PM2 process..."
-    pm2 start dist/main.js --name "api" || handle_error "Failed to start PM2 process"
+    npx pm2 start dist/main.js --name "api" --update-env || handle_error "Failed to start PM2 process"
 fi
 
 # Save PM2 configuration
-pm2 save || handle_error "Failed to save PM2 configuration"
+npx pm2 save || handle_error "Failed to save PM2 configuration"
 
 echo "Deployment completed successfully!"
