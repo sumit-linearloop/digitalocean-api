@@ -43,15 +43,33 @@ else
     git checkout "$BRANCH_NAME" || { echo "Failed to checkout branch"; exit 1; }
 fi
 
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    echo "Node.js is not installed. Please install Node.js and try again."
+    exit 1
+fi
+
+# Check if npm is installed
+if ! command -v npm &> /dev/null; then
+    echo "npm is not installed. Please install npm and try again."
+    exit 1
+fi
+
+# Check if PM2 is installed, if not install it
+if ! command -v pm2 &> /dev/null; then
+    echo "PM2 is not installed. Installing PM2..."
+    npm install -g pm2 || { echo "Failed to install PM2"; exit 1; }
+fi
+
 # Install dependencies and build
 echo "Installing dependencies and building..."
 yarn install || { echo "Failed to install dependencies"; exit 1; }
 yarn build || { echo "Failed to build project"; exit 1; }
 
+# Remove PM2 restart command
 # Check if PM2 process exists
 if pm2 list | grep -q "DEV"; then
-    echo "Restarting PM2 process..."
-    pm2 restart "DEV" || { echo "Failed to restart PM2 process"; exit 1; }
+    echo "PM2 process exists. No restart command executed."
 else
     echo "Starting new PM2 process..."
     pm2 start dist/main.js --name "DEV" || { echo "Failed to start PM2 process"; exit 1; }
