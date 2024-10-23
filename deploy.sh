@@ -6,14 +6,6 @@ BRANCH_NAME="master"
 WORK_DIR="/var/www/app"  # New work directory
 APP_NAME="api"  # Name for PM2 process
 
-# Create work directory if it doesn't exist
-echo "Creating work directory: $WORK_DIR"
-mkdir -p "$WORK_DIR" || { echo "Failed to create work directory"; exit 1; }
-
-# Set correct permissions
-chown -R "$USER:$USER" "$WORK_DIR"
-chmod 755 "$WORK_DIR"
-
 # Log file
 LOG_FILE="$WORK_DIR/deploy.log"
 
@@ -23,8 +15,19 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Create work directory if it doesn't exist
+echo "Creating work directory: $WORK_DIR" | tee -a "$LOG_FILE"
+mkdir -p "$WORK_DIR" || { echo "Failed to create work directory" | tee -a "$LOG_FILE"; exit 1; }
+
+# Ensure the log file is created
+touch "$LOG_FILE" || { echo "Failed to create log file" | tee -a "$LOG_FILE"; exit 1; }
+
+# Set correct permissions
+chown -R "$USER:$USER" "$WORK_DIR"
+chmod 755 "$WORK_DIR"
+
 # Navigate to work directory
-cd "$WORK_DIR" || { echo "Failed to change to work directory"; exit 1; }
+cd "$WORK_DIR" || { echo "Failed to change to work directory" | tee -a "$LOG_FILE"; exit 1; }
 
 # Check if the directory is empty and clone or pull the repository
 if [ -d ".git" ]; then
@@ -35,7 +38,9 @@ if [ -d ".git" ]; then
 else
     # Check if the directory is not empty
     if [ "$(ls -A .)" ]; then
-        echo "Directory is not empty. Please ensure it is clean before cloning." | tee -a "$LOG_FILE"
+        echo "Directory is not empty. Contents are:" | tee -a "$LOG_FILE"
+        ls -la | tee -a "$LOG_FILE"  # List the contents of the directory
+        echo "Please ensure the directory is clean before cloning." | tee -a "$LOG_FILE"
         exit 1
     else
         echo "Directory is empty. Cloning repository..." | tee -a "$LOG_FILE"
