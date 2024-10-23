@@ -21,7 +21,7 @@ jobs:
 
       - name: Deploy to Digital Ocean
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_ID }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         run: |
