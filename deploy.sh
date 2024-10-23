@@ -23,7 +23,7 @@ mkdir -p "$WORK_DIR" || { echo "Failed to create work directory" | tee -a "$LOG_
 touch "$LOG_FILE" || { echo "Failed to create log file" | tee -a "$LOG_FILE"; exit 1; }
 
 # Set correct permissions
-chown -R "$USER:$USER" "$WORK_DIR"
+chown -R root:root "$WORK_DIR"
 chmod 755 "$WORK_DIR"
 
 # Navigate to work directory
