@@ -31,9 +31,9 @@ jobs:
 
       - name: Run deploy script
         env:
-          SERVER_IP: 206.189.139.190
+          SERVER_IP: 128.199.28.236
           SERVER_USER: root  # Adjust if using a different user
         run: |
           echo "Starting deployment process..."
           chmod +x ./deploy.sh
-          ssh -i /d/ssh/sumit $SERVER_USER@$SERVER_IP "sudo bash -s" < ./deploy.sh
+          ssh -i ~/.ssh/id_rsa $SERVER_USER@$SERVER_IP "sudo bash -s" < ./deploy.sh
