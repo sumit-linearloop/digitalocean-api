@@ -34,6 +34,6 @@ jobs:
           echo "Current directory: $(pwd)"
           echo "Files in current directory:"
           ls -la
-          chmod +x ./deploy.sh
+          sudo chmod +x ./deploy.sh
           echo "Running deploy.sh..."
-          ./deploy.sh
+          sudo ./deploy.sh
