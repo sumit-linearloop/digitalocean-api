@@ -23,7 +23,10 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY_ID }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+          
+          # Add server's host key to known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          cat ~/.ssh/known_hosts  # Optional: Debugging step to show known_hosts content
 
       - name: Test SSH connection to GitHub
         run: |
@@ -31,7 +34,7 @@ jobs:
 
       - name: Run deploy script
         env:
-          SERVER_IP: 128.199.28.236
+          SERVER_IP: 128.199.28.236  # Ensure this is the correct server IP
           SERVER_USER: root  # Adjust if using a different user
         run: |
           echo "Starting deployment process..."
