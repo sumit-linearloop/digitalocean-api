@@ -3,7 +3,7 @@
 # Configuration variables
 GIT_REPO="git@github.com:sumit-linearloop/digitalocean-api.git"
 BRANCH_NAME="master"
-WORK_DIR="~/master"  # Use home directory for permissions
+WORK_DIR="/var/www/app"  # Use home directory for permissions
 
 # Function to check SSH connection
 check_ssh_connection() {
