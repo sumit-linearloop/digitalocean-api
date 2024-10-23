@@ -31,5 +31,9 @@ jobs:
           SERVER_HOST: root                      # Pass the server hostname
         run: |
           echo "Starting deployment process..."
+          echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
           chmod +x ./deploy.sh
+          echo "Running deploy.sh..."
           ./deploy.sh
