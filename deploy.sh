@@ -3,7 +3,7 @@
 # Configuration variables
 GIT_REPO="git@github.com:sumit-linearloop/digitalocean-api.git"
 BRANCH_NAME="master"
-WORK_DIR="/var/www"
+WORK_DIR="$HOME/app"  # Use $HOME instead of $home
 APP_NAME="api"  # Name for PM2 process
 
 # Ensure the script runs with root privileges
