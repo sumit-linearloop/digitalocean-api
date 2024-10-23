@@ -13,27 +13,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Node.js (if needed)
+      - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18'  # or any other version
+          node-version: '18'  # or specify the desired version
 
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY_ID }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
       - name: Run deployment script
         env:
-          SERVER_IP: 128.199.28.236  # Pass the server IP from secrets
-          SERVER_HOST: root                      # Pass the server hostname
+          SERVER_IP: ${{ secrets.SERVER_IP }}  # Pass the server IP from secrets
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}  # Pass the server hostname from secrets
         run: |
           echo "Starting deployment process..."
           echo "Current directory: $(pwd)"
           echo "Files in current directory:"
           ls -la
-          sudo chmod +x ./deploy.sh
+          chmod +x ./deploy.sh
           echo "Running deploy.sh..."
-          sudo ./deploy.sh
+          ./deploy.sh || { echo "Deployment failed"; exit 1; }
