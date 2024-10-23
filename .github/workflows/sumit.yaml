@@ -4,11 +4,13 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -17,25 +19,77 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm run build
 
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY_ID }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
-      - name: Test SSH connection to GitHub
-        run: ssh -T git@github.com
-
-      - name: Clone the repository
-        run: git clone git@github.com:sumit-linearloop/digitalocean-api.git ~/master
-
-      - name: Run deploy script
-        env:
-          SERVER_IP: 206.189.139.190
-          SERVER_HOST: root
+      - name: Test SSH connection
         run: |
-          echo "Starting deployment process..."
+          ssh -T git@github.com || true
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_HOST }}@${{ secrets.SERVER_IP }} 'echo "SSH connection successful"'
+
+      - name: Clone repository
+        run: |
+          if [ -d "~/master" ]; then
+            rm -rf ~/master
+          fi
+          git clone git@github.com:sumit-linearloop/digitalocean-api.git ~/master
+
+      - name: Prepare deployment
+        run: |
+          if [ ! -f "./deploy.sh" ]; then
+            echo "❌ deploy.sh not found!"
+            exit 1
+          fi
           chmod +x ./deploy.sh
+
+      - name: Run deployment
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          NODE_ENV: production
+        run: |
+          echo "🚀 Starting deployment process..."
           ./deploy.sh
+          echo "✅ Deployment completed"
+
+      - name: Verify deployment
+        if: success()
+        run: |
+          echo "Verifying deployment..."
+          ssh ${{ secrets.SERVER_HOST }}@${{ secrets.SERVER_IP }} '
+            if pm2 list | grep -q "api-server"; then
+              echo "✅ API server is running"
+              exit 0
+            else
+              echo "❌ API server is not running"
+              exit 1
+            fi
+          '
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_rsa
+          echo "🧹 Cleaned up sensitive files"
+
+      - name: Deployment Status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+            exit 1
+          fi
