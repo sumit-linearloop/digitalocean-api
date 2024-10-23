@@ -19,12 +19,18 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts  # Ensure known hosts are configured
+
       - name: Deploy to Digital Ocean
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_ID }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         run: |
           echo "Starting deployment process..."
-          chmod +x ./deploy.sh
-          ./deploy.sh
+          chmod +x ./deploy.sh  # Make sure deploy.sh is executable
+          ./deploy.sh  # Execute the deployment script
