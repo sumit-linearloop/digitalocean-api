@@ -26,13 +26,6 @@ chmod 755 "$WORK_DIR"
 # Navigate to work directory
 cd "$WORK_DIR" || { echo "Failed to change to work directory" | tee -a "$LOG_FILE"; exit 1; }
 
-# SSH check to ensure access to the repository
-echo "Testing SSH connection to GitHub..." | tee -a "$LOG_FILE"
-if ! ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
-    echo "SSH authentication failed. Ensure your SSH key is added to GitHub." | tee -a "$LOG_FILE"
-    exit 1
-fi
-
 # Clone or update the repository
 if [ -d ".git" ]; then
     echo "Repository already exists. Pulling latest changes..." | tee -a "$LOG_FILE"
