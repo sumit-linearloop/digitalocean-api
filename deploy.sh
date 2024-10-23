@@ -2,7 +2,7 @@
 # Configuration variables
 GIT_REPO="git@github.com:sumit-linearloop/digitalocean-api.git"
 BRANCH_NAME="master"
-WORK_DIR="$HOME/test"  # Use home directory for permissions
+WORK_DIR="/test"  # Use home directory for permissions
 # Create work directory if it doesn't exist
 echo "Creating work directory: $WORK_DIR"
 mkdir -p "$WORK_DIR" || { echo "Failed to create work directory"; exit 1; }
