@@ -39,8 +39,42 @@
 
 
 
-name: CI/CD Pipeline
+# name: CI/CD Pipeline
 
+# on:
+#   push:
+#     branches:
+#       - master
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Set up SSH
+#         run: |
+#           mkdir -p ~/.ssh
+#           echo "${{ secrets.SSH_PRIVATE_KEY_ID }}" > ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa
+#           ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
+#       - name: Test SSH Connection
+#         run: |
+#           ssh -T git@github.com || echo "SSH authentication successful but shell access not allowed"
+
+#       - name: Test SSH Connection to Remote Server
+#         run: |
+#           ssh -i ~/.ssh/id_rsa root@128.199.28.236 "echo 'SSH connection successful'" || { echo "SSH connection to remote server failed"; exit 1; }
+
+#       - name: Run deployment script
+#         run: |
+#           ssh -i ~/.ssh/id_rsa root@128.199.28.236 "bash -s" < ./deploy.sh || { echo "Deployment failed"; exit 1; }
+
+
+name: CI/CD Pipeline
 on:
   push:
     branches:
@@ -49,30 +83,31 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # Updated to v3 for latest features
 
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY_ID }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+          echo "${{ secrets.KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H 128.199.28.236 >> ~/.ssh/known_hosts
+          
+      - name: Configure SSH key and disable strict host checking
+        run: |
+          echo "Host 128.199.28.236" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
 
       - name: Test SSH Connection
         run: |
-          ssh -T git@github.com || echo "SSH authentication successful but shell access not allowed"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@128.199.28.236 "echo 'SSH connection successful'" || { echo "SSH connection to remote server failed"; exit 1; }
 
-      - name: Test SSH Connection to Remote Server
-        run: |
-          ssh -i ~/.ssh/id_rsa root@128.199.28.236 "echo 'SSH connection successful'" || { echo "SSH connection to remote server failed"; exit 1; }
-
-      - name: Run deployment script
+      - name: Deploy
         run: |
           ssh -i ~/.ssh/id_rsa root@128.199.28.236 "bash -s" < ./deploy.sh || { echo "Deployment failed"; exit 1; }
-
-
-
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
 
