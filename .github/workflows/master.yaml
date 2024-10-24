@@ -111,7 +111,7 @@
 
 
 
-name: CI/CD Pipeline
+name: CI/CD  master Pipeline
 
 on:
   workflow_dispatch:  # Enables manual trigger
