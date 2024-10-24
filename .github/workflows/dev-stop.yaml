@@ -41,8 +41,8 @@ jobs:
         run: |
           echo "Starting deployment..."
           ssh -i ~/.ssh/id_rsa root@128.199.28.236 << 'EOF'
-            pm2 stop api
-            pm2 delete api
-            rm -r /var/www/api
+            pm2 stop app
+            pm2 delete app
+            rm -r /var/www/dev
           EOF
-          echo "Deployment completed successfully."
+          echo "Deployment removed successfully."
