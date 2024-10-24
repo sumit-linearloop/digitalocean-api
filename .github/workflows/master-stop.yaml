@@ -1,4 +1,4 @@
-name: CI/CD pm2 remove Pipeline
+name: CI/CD master pm2 remove Pipeline
 
 on:
   workflow_dispatch:  # Enables manual trigger
